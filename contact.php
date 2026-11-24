@@ -1,10 +1,14 @@
 <?php
 declare(strict_types=1);
 
-/* Configure in the hosting panel, never in public source:
- * AEDMEDIA_CONTACT_TO = private administrator inbox
- * AEDMEDIA_FROM_EMAIL = sender address authorized by your host
+/* Private configuration lives one directory above the website document root:
+ * /home/account/private/db.php
+ * It must return an array with contact_to and from_email keys.
+ * Never place the real file inside the public website directory or Git.
  */
+$configPath = dirname(__DIR__) . '/private/db.php';
+$mailConfig = is_file($configPath) ? require $configPath : [];
+if (!is_array($mailConfig)) $mailConfig = [];
 function finish(int $status, string $title, string $message): void {
     http_response_code($status);
     header('Content-Type: text/html; charset=UTF-8');
@@ -69,8 +73,8 @@ rewind($fp); ftruncate($fp, 0); fwrite($fp, json_encode($attempts)); fflush($fp)
 flock($fp, LOCK_UN); fclose($fp);
 
 /* The recipient is private server configuration, never visitor input. */
-$recipient = getenv('AEDMEDIA_CONTACT_TO') ?: '';
-$sender = getenv('AEDMEDIA_FROM_EMAIL') ?: '';
+$recipient = (string)($mailConfig['contact_to'] ?? '');
+$sender = (string)($mailConfig['from_email'] ?? '');
 if (!filter_var($recipient, FILTER_VALIDATE_EMAIL) || !filter_var($sender, FILTER_VALIDATE_EMAIL) || preg_match('/[\r\n]/', $recipient . $sender)) {
     error_log('AEDMedia contact: private mail environment variables are missing or invalid.');
     finish(503, 'Enquiries temporarily unavailable', 'The website administrator needs to finish the private mail configuration.');
