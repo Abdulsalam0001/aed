@@ -5,7 +5,7 @@ declare(strict_types=1);
  * AEDMEDIA_CONTACT_TO = private administrator inbox
  * AEDMEDIA_FROM_EMAIL = sender address authorized by your host
  */
-function finish(int $status, string $title, string $message): never {
+function finish(int $status, string $title, string $message): void {
     http_response_code($status);
     header('Content-Type: text/html; charset=UTF-8');
     header('X-Content-Type-Options: nosniff');
