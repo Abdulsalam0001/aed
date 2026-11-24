@@ -1,34 +1,42 @@
 # AEDMedia website
 
-A responsive multi-page static website for AEDMedia, a Los Angeles-based live entertainment and event production company.
+A responsive multi-page website for AEDMedia, a Los Angeles-based live entertainment and event production company.
 
 ## Pages
 - `index.html` — Home
 - `about.html` — About AEDMedia
 - `productions.html` — Production capabilities and portfolio placeholder
 - `bookings.html` — Bookings and partnerships
-- `contact.html` — Contact form and email details
+- `contact.html` — Contact form
 
 ## Run locally
-Open `index.html` in a browser, or serve the folder with any static file server.
+Open `index.html` in a browser, or serve the folder with a PHP-enabled local server to test the contact endpoint.
 
-## Contact form
-The contact form uses a `mailto:` handoff to `contact@aemedia.co`. It pre-fills an email in the visitor's email application; it does not send or store submissions on the server. For direct web submissions, connect a trusted form backend or server-side email endpoint.
+## Contact form and private mail configuration
 
-## Content notes
-The site does not invent AEDMedia's company history, client list, or production credits. Add confirmed company milestones, client logos and event photography when supplied.
+The contact form posts to `contact.php`. The endpoint sends enquiries using PHP `mail()`; it does not accept a recipient address from the visitor.
 
+For security, the real configuration file must be stored **outside the public website directory**. If your website files are in `/home/ACCOUNT/public_html/`, create:
 
-## Private PHP contact mail
+`/home/ACCOUNT/private/db.php`
 
-The contact form posts to `contact.php`, which sends mail using PHP `mail()`. The recipient is never accepted from the visitor and is not hard-coded in the public repository.
+Use this structure, replacing the example addresses with your own:
 
-Configure these environment variables in the hosting control panel (or the hosting provider's private PHP environment configuration):
+```php
+<?php
+declare(strict_types=1);
 
-- `AEDMEDIA_CONTACT_TO`: the private administrator inbox that receives enquiries.
-- `AEDMEDIA_FROM_EMAIL`: a sender address on a domain authorized by the hosting mail service.
+return [
+    'contact_to' => 'YOUR_PRIVATE_ADMIN_INBOX@example.com',
+    'from_email' => 'website@aemedia.co',
+];
+```
 
-Do not put recipient settings, SMTP credentials, or other secrets in public files. The endpoint accepts POST only, checks the browser Origin when supplied, limits request size, validates fields, uses a hidden honeypot, and allows at most three attempts per IP in a 15-minute window. It fixes the recipient on the server, so this is not an open mail relay. PHP `mail()` must be enabled and configured by the hosting provider. The hosting administrator should also configure outbound mail limits and monitor mail logs.
+The `contact_to` value is the private inbox that receives website enquiries. The `from_email` value must be an address authorized by your hosting provider's mail service (ideally an address on your domain). Keep the actual `db.php` outside `public_html`; do not commit it to GitHub or place it in a publicly accessible folder. Restrict its file permissions (typically `600` where supported).
+
+The PHP endpoint loads that file from the sibling `private` directory. If your hosting layout is different, adjust the `$configPath` near the top of `contact.php` to the correct absolute path outside the document root.
+
+The endpoint also accepts POST only, checks the browser Origin when supplied, limits request size, validates fields, uses a hidden honeypot, and allows at most three attempts per IP in a 15-minute window. PHP `mail()` must be enabled and configured by the hosting provider. The hosting administrator should test delivery and review mail logs after setup.
 
 ## Hosting
-This is plain HTML, CSS and PHP and can be hosted on a PHP-enabled web host. The contact form requires PHP with the mail function enabled.
+The site uses HTML, CSS, JavaScript and PHP. The contact form requires a PHP-enabled host; it will not send mail when deployed as static-only GitHub Pages or Cloudflare Pages.
